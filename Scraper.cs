@@ -44,7 +44,7 @@ namespace MembershipScraperNG
             collection = database.GetCollection<BsonDocument>("members");
         }
 
-        public void GetMembers()
+        public async Task GetMembers()
         {
             #region make_request
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(sumsUrl);
@@ -52,13 +52,13 @@ namespace MembershipScraperNG
             request.CookieContainer = new CookieContainer();
             request.CookieContainer.Add(new Cookie("su_session", cookieStore.Cookie, "/", "student-dashboard.sums.su"));
 
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            HttpWebResponse response = (HttpWebResponse)(await request.GetResponseAsync());
             StreamReader readStream = new StreamReader(response.GetResponseStream(), System.Text.Encoding.UTF8);
             #endregion
 
             var members = ScrapeHtml(readStream);
             Console.WriteLine("Scraped {0} Members", members.Count);
-            updateMembers(members);
+            await updateMembers(members);
 
             #region update_cookie
             string s = response.Headers["Set-Cookie"];
@@ -67,8 +67,13 @@ namespace MembershipScraperNG
             {
                 var val = CookieValue(s, "su_session");
                 Console.WriteLine(val);
-                cookieStore.Cookie = val.Remove(val.Length - 1, 1);  ;
+                cookieStore.Cookie = val.Remove(val.Length - 1, 1); ;
             }
+            #endregion
+
+            #region send heartbeat
+            HttpWebRequest heartbeat = (HttpWebRequest)WebRequest.Create(heartbeatUrl);
+            await heartbeat.GetResponseAsync();
             #endregion
 
             #region  cleanup
@@ -107,7 +112,7 @@ namespace MembershipScraperNG
 
             return ms;
         }
-        protected void updateMembers(List<Member> ms)
+        protected async Task updateMembers(List<Member> ms)
         {
 
             var xs = new List<Task>();
@@ -116,7 +121,10 @@ namespace MembershipScraperNG
                 xs.Add(AddOrUpdate(m));
             }
 
-            xs.ForEach(x => x.Wait());
+            foreach (var x in xs)
+            {
+                await x;
+            }
         }
 
         public async Task AddOrUpdate(Member m)
@@ -125,7 +133,7 @@ namespace MembershipScraperNG
             var filter = Builders<BsonDocument>.Filter.Eq("ID", m.ID);
             var nMatches = await collection.Find(filter).CountDocumentsAsync();
 
-            if(nMatches == 0)
+            if (nMatches == 0)
             {
                 await collection.InsertOneAsync(document);
             }

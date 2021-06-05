@@ -9,7 +9,7 @@ namespace MembershipScraperNG
         public string Type { get; set; }
         public string Joined { get; set; }
 
-        public string DiscordID {get;set;}
+        public string DiscordID { get; set; }
 
         public override string ToString()
         {

@@ -9,20 +9,17 @@ namespace MembershipScraperNG
         public string Type { get; set; }
         public string Joined { get; set; }
 
-        public string DiscordID { get; set; }
-
         public override string ToString()
         {
             return String.Format("{0}, '{1}', '{2}', '{3}'", ID, Name, Type, Joined);
         }
 
-        public Member(uint id, string name, string type, string joined, string discordID = null)
+        public Member(uint id, string name, string type, string joined)
         {
             ID = id;
             Name = name;
             Type = type;
             Joined = joined;
-            DiscordID = DiscordID;
         }
     }
 }

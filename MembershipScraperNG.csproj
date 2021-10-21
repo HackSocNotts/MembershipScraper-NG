@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CSharpDiscordWebhook" Version="2.2.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.12.3" />
     <PackageReference Include="Scrapysharp" Version="3.0.0" />
   </ItemGroup>

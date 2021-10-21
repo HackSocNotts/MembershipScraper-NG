@@ -14,6 +14,9 @@ using ScrapySharp.Html.Dom;
 using MongoDB.Driver;
 using MongoDB.Bson;
 
+using Discord;
+using Discord.Webhook;
+
 namespace MembershipScraperNG
 {
     public class Scraper
@@ -21,6 +24,7 @@ namespace MembershipScraperNG
         public ICookieStore cookieStore;
 
         string heartbeatUrl;
+        string failUrl;
         string mongoUrl;
         string mongoCollection;
         string sumsUrl;
@@ -34,6 +38,7 @@ namespace MembershipScraperNG
             this.cookieStore = c;
 
             heartbeatUrl = Environment.GetEnvironmentVariable("heartbeatUrl");
+            failUrl = Environment.GetEnvironmentVariable("failUrl");
             mongoUrl = Environment.GetEnvironmentVariable("mongoUrl");
             mongoCollection = Environment.GetEnvironmentVariable("mongoCollection");
 
@@ -72,8 +77,17 @@ namespace MembershipScraperNG
             #endregion
 
             #region send heartbeat
-            HttpWebRequest heartbeat = (HttpWebRequest)WebRequest.Create(heartbeatUrl);
-            await heartbeat.GetResponseAsync();
+            if(members.Count > 0)
+            {
+                HttpWebRequest heartbeat = (HttpWebRequest)WebRequest.Create(heartbeatUrl);
+                await heartbeat.GetResponseAsync();
+            } else {
+                DiscordWebhook hook = new DiscordWebhook();
+                hook.Url = failUrl;
+                DiscordMessage message = new DiscordMessage();
+                message.Content = "Scraping Returned 0 members :(";
+                hook.Send(message);
+            }
             #endregion
 
             #region  cleanup
